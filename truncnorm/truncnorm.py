@@ -15,6 +15,8 @@ def diag(A):
 def integral(mu, Sigma, a, b):
     """P(a<=x<=b) for x~N(mu,Sigma) """
 
+    N = np.shape(mu)[-1]
+
     # If we don't have an upper bound, flip everything and use the lower bound
     # as the upper bound.
     if b is None:
@@ -27,6 +29,9 @@ def integral(mu, Sigma, a, b):
         if b is None:
             # Trivial integral
             return 1
+
+        if N == 1:
+            return stats.norm.cdf(b, mu, Sigma[...,0])[...,0]
 
         # If only upper bound, we can compute P(x<=b) with a single evaluation
         # of CDF
@@ -52,6 +57,11 @@ def integral(mu, Sigma, a, b):
             )
 
         return p
+
+    if N == 1:
+        s = np.sqrt(Sigma)[...,0]
+        p = stats.norm.cdf(b, mu, s) - stats.norm.cdf(a, mu, s)
+        return p[...,0]
 
     raise NotImplementedError()
 
@@ -191,9 +201,22 @@ def _get_f(F, k, N, ndim):
 
 def _recurrent_integrals(mu, Sigma, a, b, m):
 
-    # TODO: What if the dimensionality gets to 0??
-    if np.shape(mu)[-1] == 0:
-        raise ValueError()
+    N = np.shape(mu)[-1]
+
+    # Base case for 1D, that is, scalars
+    if N == 1:
+        Fs = []
+        L = integral(mu, Sigma, a, b)
+        Fs.append(L)
+        s2 = Sigma[...,0]
+        s = np.sqrt(s2)
+        for k in range(0, m):
+            c1 = 0 if k < 1 else k*s2*Fs[k-1][...,None,None]
+            c2 = 0 if a is None else a**k * stats.norm.pdf((a-mu)/s)
+            c3 = 0 if b is None else b**k * stats.norm.pdf((b-mu)/s)
+            F = (mu * Fs[k][...,None] + c1 + s * (c2 - c3))
+            Fs.append(F)
+        return Fs
 
     s2 = diag(Sigma)
 
@@ -232,8 +255,6 @@ def _recurrent_integrals(mu, Sigma, a, b, m):
             None if b is None else
             compute_lower_dimensional_integrals(b)
         )
-
-    N = np.shape(mu)[-1]
 
     # Compute the different total power integrals
     #
