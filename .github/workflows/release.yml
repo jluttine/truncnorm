@@ -19,7 +19,7 @@ jobs:
           python-version: "3.x"
       - name: Install dependecies
         run: |
-          pip install setuptools twine
+          pip install setuptools_scm
       - name: Build release distributions
         run: |
           python setup.py egg_info -Db '' sdist

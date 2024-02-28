@@ -12,7 +12,6 @@ ps.buildPythonPackage rec {
   depsBuildBuild = with ps; [
     ipython
     pip
-    twine
     setuptools_scm
     pkgs.git
   ];
