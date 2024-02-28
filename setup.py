@@ -43,6 +43,6 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering",
             "Topic :: Software Development :: Libraries",
         ],
-        long_description=read('README'),
+        long_description=read('README.md'),
         long_description_content_type="text/markdown",
     )
